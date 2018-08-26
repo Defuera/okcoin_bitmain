@@ -2,10 +2,8 @@ import 'package:bitmain/api/order.dart';
 import 'package:bitmain/orders_presenter.dart';
 import 'package:flutter/material.dart';
 
-class OrdersPage extends StatefulWidget {
-  @override
-  OrdersPageState createState() => OrdersPageState();
-}
+
+//region view model classes
 
 class ViewModel {}
 class Loading extends ViewModel {}
@@ -17,9 +15,25 @@ class Data extends ViewModel {
   Data({this.buyOrders, this.sellOrders});
 }
 
+//endregion
 
 
-class OrdersPageState extends State<OrdersPage> {
+class OrdersPageView {
+
+  void showLoading() {}
+
+  void showData({List<Order> buyOrders, List<Order> sellOrders}) {}
+
+  void showError() {}
+
+}
+
+class OrdersPage extends StatefulWidget {
+  @override
+  OrdersPageState createState() => OrdersPageState();
+}
+
+class OrdersPageState extends State<OrdersPage> implements OrdersPageView {
   OrdersPagePresenter _presenter;
   ViewModel _viewModel = Loading();
 

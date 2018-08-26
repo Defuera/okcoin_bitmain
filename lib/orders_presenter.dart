@@ -1,12 +1,13 @@
 import 'package:bitmain/api_service.dart';
 import 'package:bitmain/orders_page.dart';
 
-class OrdersPagePresenter {
+const ORDERS_TO_DISPLAY = 20;
 
-  final OrdersPageState _state;
+class OrdersPagePresenter {
+  final OrdersPageView _view;
   final service = ApiService();
 
-  OrdersPagePresenter(this._state);
+  OrdersPagePresenter(this._view);
 
   void start() {
     loadOrders();
@@ -14,9 +15,17 @@ class OrdersPagePresenter {
 
   void loadOrders() async {
     final orders = await service.getOrders(0, 100);
-    final sellOrders = orders.where( (it) => it.type == "sell").toList();
-    final buyOrders = orders.where( (it) => it.type == "buy").toList();
-    _state.showData(buyOrders : buyOrders, sellOrders: sellOrders);
-  }
+    final sellOrders = orders.where((it) => it.type == "sell").toList();
+    final buyOrders = orders.where((it) => it.type == "buy").toList();
 
+    //order desc
+    buyOrders.sort((a, b) => b.price.compareTo(a.price));
+    buyOrders.length = ORDERS_TO_DISPLAY;
+
+    //order asc
+    sellOrders.sort((a, b) => a.price.compareTo(b.price));
+    sellOrders.length = ORDERS_TO_DISPLAY;
+
+    _view.showData(buyOrders: buyOrders, sellOrders: sellOrders);
+  }
 }

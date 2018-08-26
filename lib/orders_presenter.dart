@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:bitmain/api_service.dart';
+import 'package:bitmain/model/match.dart';
 import 'package:bitmain/model/order.dart';
 import 'package:bitmain/orders_page.dart';
 
@@ -16,6 +17,7 @@ class OrdersPagePresenter {
   var _ordersLoaded = 0;
   final _buyOrders = List<Order>();
   final _sellOrders = List<Order>();
+  final _matchQueue = List<OrderMatch>();
 
   OrdersPagePresenter(this._view);
 
@@ -43,58 +45,58 @@ class OrdersPagePresenter {
 
       switch (it.type) {
         case "buy":
-          final matchingSellOrder = _sellOrders.firstWhere(
-                  (sellOrder) => sellOrder.price < it.price,
-                  orElse: () => null);
-          if (matchingSellOrder != null) { //todo recursion needed
-            _onMatchingOrders(it, matchingSellOrder);
-          } else {
-            _addBuyOrder(it); //order desc
+          if (!checkMatchForBuyOrder(it)) {
+            _addBuyOrder(it);
           }
           break;
 
         case "sell":
-          final matchingBuyOrder = _buyOrders.firstWhere(
-                  (buyOrder) => buyOrder.price > it.price,
-              orElse: () => null);
-          if (matchingBuyOrder != null) { //todo recursion needed
-            _onMatchingOrders(matchingBuyOrder, it);
-          } else {
-            _addSellOrder(it); //order desc
+          if (!checkMatchForSellOrder(it)) {
+            _addSellOrder(it);
           }
 
           break;
       }
     });
 
-    _view.showData(buyOrders: _buyOrders, sellOrders: _sellOrders);
+    _view.showOrders(buyOrders: _buyOrders, sellOrders: _sellOrders);
   }
 
   void _onMatchingOrders(Order buyOrder, Order sellOrder) {
-    final quantity = min<int>(buyOrder.quantity, sellOrder.quantity);
-//    final price = (buyOrder.price - sellOrder.price) / 2 + sellOrder.price;
     print("it's a match!!!");
+    final quantity = min<int>(buyOrder.quantity, sellOrder.quantity);
+    final price = (buyOrder.price - sellOrder.price) / 2 + sellOrder.price;
 
-    _buyOrders.remove(buyOrder);
-    var remainingBuyOrderQuantity = buyOrder.quantity - quantity;
-    if (remainingBuyOrderQuantity > 0) {
-      final updatedBuyOrder = copyOrder(order: buyOrder, quantity: remainingBuyOrderQuantity);
-      _addBuyOrder(updatedBuyOrder); //order desc
-    }
+    _updatedMatchQueue(quantity, price);
+    final remainingBuyOrder = _updateList(_buyOrders, buyOrder, quantity, _addBuyOrder);
+    final remainingSellOrder = _updateList(_sellOrders, sellOrder, quantity, _addSellOrder);
 
-    _sellOrders.remove(sellOrder);
-    var remainingSellOrderQuantity = sellOrder.quantity - quantity;
-    if (remainingSellOrderQuantity > 0) {
-      final updatedSellOrder = copyOrder(order: sellOrder, quantity: remainingSellOrderQuantity);
-      _addSellOrder(updatedSellOrder); //order desc
+    //recursive match handling
+    checkMatchForBuyOrder(remainingBuyOrder);
+    checkMatchForSellOrder(remainingSellOrder);
+
+    if (remainingBuyOrder != null && remainingSellOrder != null) {
+      throw Exception("illegal state, both orders must not remain");
     }
   }
 
-  Order copyOrder({Order order, int quantity}) {
-    return Order(id: order.id, type: order.type, quantity: quantity, price: order.price);
+  ///Returns order with remaining amount or null
+  Order _updateList(List<Order> list, Order order, int quantity, void Function(Order order) addOrderFunc) {
+    list.remove(order);
+    var remainingQuantity = order.quantity - quantity;
+    if (remainingQuantity > 0) {
+      final updatedOrder = copyOrder(order: order, quantity: remainingQuantity);
+      addOrderFunc(updatedOrder);
+      return updatedOrder;
+    } else {
+      return null;
+    }
   }
 
-  void checkForMatches(Order order, List<Order> matchQueue) {}
+  void _updatedMatchQueue(int quantity, double price) {
+    _matchQueue.add(OrderMatch(time: DateTime.now(), quantity: quantity, price: price));
+    _view.showMatchQueue(_matchQueue);
+  }
 
   //region helper functions
 
@@ -111,6 +113,36 @@ class OrdersPagePresenter {
   }
 
   void _loadDataDelayed() => Future.delayed(Duration(milliseconds: _POLL_DELAY_MILLISECONDS), () => loadOrders());
+
+  Order copyOrder({Order order, int quantity}) {
+    return Order(id: order.id, type: order.type, quantity: quantity, price: order.price);
+  }
+
+  //todo function with side affect
+  bool checkMatchForBuyOrder(Order buyOrder) {
+    if (buyOrder != null) {
+      final matchingOrder = _sellOrders.firstWhere((sellOrder) => sellOrder.price <= buyOrder.price, orElse: () => null);
+      if (matchingOrder != null) {
+        _onMatchingOrders(buyOrder, matchingOrder);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  //todo function with side affect
+  bool checkMatchForSellOrder(Order sellOrder) {
+    if (sellOrder != null) {
+      final matchingOrder = _buyOrders.firstWhere((buyOrder) => buyOrder.price >= sellOrder.price, orElse: () => null);
+      if (matchingOrder != null) {
+        _onMatchingOrders(matchingOrder, sellOrder);
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   //endregion
 

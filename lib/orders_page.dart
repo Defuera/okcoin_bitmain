@@ -1,4 +1,5 @@
 import 'package:bitmain/model/order.dart';
+import 'package:bitmain/model/match.dart';
 import 'package:bitmain/orders_presenter.dart';
 import 'package:flutter/material.dart';
 
@@ -21,9 +22,11 @@ class OrdersPageView {
 
   void showLoading() {}
 
-  void showData({List<Order> buyOrders, List<Order> sellOrders}) {}
+  void showOrders({List<Order> buyOrders, List<Order> sellOrders}) {}
 
   void showError() {}
+
+  void showMatchQueue(List<OrderMatch> matchQueue) {}
 
 }
 
@@ -49,18 +52,26 @@ class OrdersPageState extends State<OrdersPage> implements OrdersPageView {
 
   //region state manipulation
 
+  @override
   void showLoading() {
     setState(() {
       _viewModel = Loading();
     });
   }
 
-  void showData({List<Order> buyOrders, List<Order> sellOrders}) {
+  @override
+  void showOrders({List<Order> buyOrders, List<Order> sellOrders}) {
     setState(() {
       _viewModel = Data(buyOrders: buyOrders, sellOrders: sellOrders);
     });
   }
 
+  @override
+  void showMatchQueue(List<OrderMatch> matchQueue) {
+    // TODO: implement showMatchQueue
+  }
+
+  @override
   void showError() {
     setState(() {
       _viewModel = Error();

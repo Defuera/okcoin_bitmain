@@ -1,4 +1,4 @@
-import 'package:bitmain/api/order.dart';
+import 'package:bitmain/model/order.dart';
 import 'package:bitmain/orders_presenter.dart';
 import 'package:flutter/material.dart';
 

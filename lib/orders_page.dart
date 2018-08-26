@@ -2,7 +2,6 @@ import 'package:bitmain/api/order.dart';
 import 'package:bitmain/orders_presenter.dart';
 import 'package:flutter/material.dart';
 
-
 //region view model classes
 
 class ViewModel {}
@@ -34,6 +33,9 @@ class OrdersPage extends StatefulWidget {
 }
 
 class OrdersPageState extends State<OrdersPage> implements OrdersPageView {
+
+  static const ORDERS_LIST_HEADERS_COUNT = 2;
+
   OrdersPagePresenter _presenter;
   ViewModel _viewModel = Loading();
 
@@ -92,47 +94,60 @@ class OrdersPageState extends State<OrdersPage> implements OrdersPageView {
 
   //region widgets
 
-  Widget getDataView(Data data)  =>
-    Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        getListView(data.buyOrders, Colors.green),
-        getListView(data.sellOrders, Colors.red),
-      ],
-    );
+  Widget getDataView(Data data) => Padding(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          getListView("Buy", data.buyOrders, Colors.green),
+          Padding(padding: new EdgeInsets.all(16.0)),
+          getListView("Sell", data.sellOrders, Colors.red),
+        ],
+      ),
+      padding: EdgeInsets.all(8.0));
 
-  Widget getListView(List<Order> orders, Color color) =>
-      Flexible (
-          child: ListView.builder(
-        itemCount: orders.length,
-        itemBuilder: (BuildContext context, int index) =>
-            getOrderWidget(context, orders[index], color),
-      ), flex: 1);
+  Widget getListView(String title, List<Order> orders, Color color) => Flexible(
+      child: ListView.builder(
+          itemCount: orders.length + ORDERS_LIST_HEADERS_COUNT,
+          itemBuilder: (BuildContext context, int index) {
+            switch (index) {
+              case 0:
+                return Text(title, style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: color));
 
-  Widget getOrderWidget(BuildContext context, Order order, Color color) =>
-      Container(
-        padding: EdgeInsets.all(16.0),
+              case 1:
+                return Padding(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text("Price", style: TextStyle(fontSize: 18.0)),
+                        Text("Amount", style: TextStyle(fontSize: 18.0)),
+                      ],
+                    ),
+                    padding: new EdgeInsets.symmetric(vertical: 8.0));
+
+              default:
+                return getOrderWidget(context, orders[index - ORDERS_LIST_HEADERS_COUNT], color);
+            }
+          }),
+      flex: 1);
+
+  Widget getOrderWidget(BuildContext context, Order order, Color color) => Container(
+        padding: EdgeInsets.symmetric(vertical: 16.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Text(
               "${order.price}",
-              style: TextStyle(fontSize: 18.0,
-                  fontWeight: FontWeight.bold,
-                  color: color),
+              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: color),
             ),
             Text(
               "${order.quantity}",
-              style: TextStyle(fontSize: 18.0,
-                  fontWeight: FontWeight.bold,
-                  color: color),
+              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: color),
             )
           ],
         ),
       );
 
-  Widget getErrorView() =>
-      GestureDetector(
+  Widget getErrorView() => GestureDetector(
         child: Center(
           child: Text("Network error, try again later"),
         ),

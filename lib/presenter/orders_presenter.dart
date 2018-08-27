@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:bitmain/model/api_service.dart';
 import 'package:bitmain/model/match.dart';
 import 'package:bitmain/model/order.dart';
-import 'package:bitmain/view/orders_page.dart';
+import 'package:bitmain/view/orders_page_view.dart';
 
 class OrdersPagePresenter {
   static const _PER_PAGE = 20;
@@ -45,21 +45,18 @@ class OrdersPagePresenter {
 
       switch (it.type) {
         case "buy":
-          if (!checkMatchForBuyOrder(it)) {
-            _addBuyOrder(it);
-          }
+          _addBuyOrder(it);
+          showData();
+          checkMatchForBuyOrder(it);
           break;
 
         case "sell":
-          if (!checkMatchForSellOrder(it)) {
-            _addSellOrder(it);
-          }
-
+          _addSellOrder(it);
+          showData();
+          checkMatchForSellOrder(it);
           break;
       }
     });
-
-    _view.showOrders(buyOrders: _buyOrders, sellOrders: _sellOrders);
   }
 
   void _onMatchingOrders(Order buyOrder, Order sellOrder) {
@@ -86,6 +83,7 @@ class OrdersPagePresenter {
   Order _updateList(List<Order> list, Order order, int quantity, void Function(Order order) addOrderFunc) {
     list.remove(order);
     var remainingQuantity = order.quantity - quantity;
+
     if (remainingQuantity > 0) {
       final updatedOrder = copyOrder(order: order, quantity: remainingQuantity);
       addOrderFunc(updatedOrder);
@@ -97,8 +95,9 @@ class OrdersPagePresenter {
 
   void _updatedMatchQueue(int quantity, double price) {
     _matchQueue.add(OrderMatch(time: DateTime.now(), quantity: quantity, price: price));
-    _view.showMatchQueue(_matchQueue);
+    showData();
   }
+
 
   //region helper functions
 
@@ -148,9 +147,9 @@ class OrdersPagePresenter {
 
   void showData({Duration delay: const Duration(seconds: 0)}) async {
     await Future.delayed(delay);
-    _view.showOrders(buyOrders: _buyOrders, sellOrders: _sellOrders);
+    _view.showData(buyOrders: _buyOrders, sellOrders: _sellOrders, matchQueue: _matchQueue);
   }
 
-//endregion
+  //endregion
 
 }

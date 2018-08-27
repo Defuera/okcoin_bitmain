@@ -1,34 +1,11 @@
-import 'package:bitmain/model/order.dart';
 import 'package:bitmain/model/match.dart';
+import 'package:bitmain/model/order.dart';
 import 'package:bitmain/presenter/orders_presenter.dart';
+import 'package:bitmain/view/orders_page_view.dart';
+import 'package:bitmain/view/orders_page_view_model.dart';
+import 'package:bitmain/view/tabs/match_queue_tab.dart';
+import 'package:bitmain/view/tabs/orders_tab.dart';
 import 'package:flutter/material.dart';
-
-//region view model classes
-
-class ViewModel {}
-class Loading extends ViewModel {}
-class Error extends ViewModel {}
-class Data extends ViewModel {
-  final List<Order> buyOrders;
-  final List<Order> sellOrders;
-
-  Data({this.buyOrders, this.sellOrders});
-}
-
-//endregion
-
-
-class OrdersPageView {
-
-  void showLoading() {}
-
-  void showOrders({List<Order> buyOrders, List<Order> sellOrders}) {}
-
-  void showError() {}
-
-  void showMatchQueue(List<OrderMatch> matchQueue) {}
-
-}
 
 class OrdersPage extends StatefulWidget {
   @override
@@ -36,9 +13,6 @@ class OrdersPage extends StatefulWidget {
 }
 
 class OrdersPageState extends State<OrdersPage> implements OrdersPageView {
-
-  static const ORDERS_LIST_HEADERS_COUNT = 2;
-
   OrdersPagePresenter _presenter;
   ViewModel _viewModel = Loading();
 
@@ -48,7 +22,6 @@ class OrdersPageState extends State<OrdersPage> implements OrdersPageView {
     _presenter = OrdersPagePresenter(this);
     _presenter.start();
   }
-
 
   //region state manipulation
 
@@ -60,26 +33,20 @@ class OrdersPageState extends State<OrdersPage> implements OrdersPageView {
   }
 
   @override
-  void showOrders({List<Order> buyOrders, List<Order> sellOrders}) {
+  void showData({List<Order> buyOrders, List<Order> sellOrders, List<OrderMatch> matchQueue}) {
     setState(() {
-      _viewModel = Data(buyOrders: buyOrders, sellOrders: sellOrders);
+      _viewModel = Data(buyOrders: buyOrders, sellOrders: sellOrders, matchQueue: matchQueue);
     });
-  }
-
-  @override
-  void showMatchQueue(List<OrderMatch> matchQueue) {
-    // TODO: implement showMatchQueue
   }
 
   @override
   void showError() {
     setState(() {
-      _viewModel = Error();
+      _viewModel = DataError();
     });
   }
 
   //endregion
-
 
   @override
   Widget build(BuildContext context) {
@@ -87,82 +54,44 @@ class OrdersPageState extends State<OrdersPage> implements OrdersPageView {
 
     if (_viewModel is Loading) {
       widget = getLoadingView();
-    } else if (_viewModel is Error) {
+    } else if (_viewModel is DataError) {
       widget = getErrorView();
     } else if (_viewModel is Data) {
-      widget = getDataView(_viewModel);
+      widget = getTabsView(_viewModel);
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        primary: true,
-        title: Text("Orders"),
-      ),
-      body: widget,
-    );
+    return DefaultTabController(
+        // The number of tabs / content sections we need to display
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            primary: true,
+            title: Text("Bitmain trader"),
+            bottom:  TabBar(
+              tabs: [
+                Tab(text: "Orders"),
+                Tab(text: "Trades"),
+              ],
+            ),
+          ),
+          body: widget,
+        ));
   }
 
+  //region views
 
-  //region widgets
-
-  Widget getDataView(Data data) => Padding(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          getListView("Buy", data.buyOrders, Colors.green),
-          Padding(padding: new EdgeInsets.all(16.0)),
-          getListView("Sell", data.sellOrders, Colors.red),
-        ],
-      ),
-      padding: EdgeInsets.all(8.0));
-
-  Widget getListView(String title, List<Order> orders, Color color) => Flexible(
-      child: ListView.builder(
-          itemCount: orders.length + ORDERS_LIST_HEADERS_COUNT,
-          itemBuilder: (BuildContext context, int index) {
-            switch (index) {
-              case 0:
-                return Text(title, style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: color));
-
-              case 1:
-                return Padding(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Text("Price", style: TextStyle(fontSize: 18.0)),
-                        Text("Amount", style: TextStyle(fontSize: 18.0)),
-                      ],
-                    ),
-                    padding: new EdgeInsets.symmetric(vertical: 8.0));
-
-              default:
-                return getOrderWidget(context, orders[index - ORDERS_LIST_HEADERS_COUNT], color);
-            }
-          }),
-      flex: 1);
-
-  Widget getOrderWidget(BuildContext context, Order order, Color color) => Container(
-        padding: EdgeInsets.symmetric(vertical: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Text(
-              "${order.price}",
-              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: color),
-            ),
-            Text(
-              "${order.quantity}",
-              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: color),
-            )
-          ],
-        ),
+  Widget getTabsView(Data data) =>
+      TabBarView(
+        children: [
+          OrdersTab(data),
+          MatchQueueTab(data.matchQueue),
+        ]
       );
 
   Widget getErrorView() => GestureDetector(
         child: Center(
-          child: Text("Network error, try again later"),
+          child: Text("Network error, trying to reconnect..."),
         ),
-//    onTap: () => _presenter.loadListPairs(),
       );
 
   Widget getLoadingView() => Center(child: CircularProgressIndicator());

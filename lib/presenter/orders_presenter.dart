@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:bitmain/api_service.dart';
+import 'package:bitmain/model/api_service.dart';
 import 'package:bitmain/model/match.dart';
 import 'package:bitmain/model/order.dart';
-import 'package:bitmain/orders_page.dart';
+import 'package:bitmain/view/orders_page.dart';
 
 class OrdersPagePresenter {
   static const _PER_PAGE = 20;
@@ -75,6 +75,8 @@ class OrdersPagePresenter {
     checkMatchForBuyOrder(remainingBuyOrder);
     checkMatchForSellOrder(remainingSellOrder);
 
+    showData(delay: Duration(seconds: 1));
+
     if (remainingBuyOrder != null && remainingSellOrder != null) {
       throw Exception("illegal state, both orders must not remain");
     }
@@ -144,6 +146,11 @@ class OrdersPagePresenter {
     return false;
   }
 
-  //endregion
+  void showData({Duration delay: const Duration(seconds: 0)}) async {
+    await Future.delayed(delay);
+    _view.showOrders(buyOrders: _buyOrders, sellOrders: _sellOrders);
+  }
+
+//endregion
 
 }

@@ -1,5 +1,5 @@
 import 'package:bitmain/model/order.dart';
-import 'package:bitmain/view/orders_page_view_model.dart';
+import 'package:bitmain/presenter/view_model_orders.dart';
 import 'package:flutter/material.dart';
 
 class OrdersTab extends StatelessWidget {

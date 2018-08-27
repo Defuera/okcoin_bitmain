@@ -1,4 +1,4 @@
-import 'package:bitmain/view/orders_page.dart';
+import 'package:bitmain/view/page_orders.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(new MyApp());

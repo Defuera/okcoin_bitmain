@@ -1,10 +1,10 @@
 import 'package:bitmain/model/match.dart';
 import 'package:bitmain/model/order.dart';
-import 'package:bitmain/presenter/orders_presenter.dart';
-import 'package:bitmain/view/orders_page_view.dart';
-import 'package:bitmain/view/orders_page_view_model.dart';
-import 'package:bitmain/view/tabs/match_queue_tab.dart';
-import 'package:bitmain/view/tabs/orders_tab.dart';
+import 'package:bitmain/presenter/presenter_orders.dart';
+import 'package:bitmain/view/view_orders.dart';
+import 'package:bitmain/presenter/view_model_orders.dart';
+import 'package:bitmain/view/tabs/tab_match_queue.dart';
+import 'package:bitmain/view/tabs/tab_orders.dart';
 import 'package:flutter/material.dart';
 
 class OrdersPage extends StatefulWidget {

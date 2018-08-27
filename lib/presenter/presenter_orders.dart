@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:bitmain/model/api_service.dart';
 import 'package:bitmain/model/match.dart';
 import 'package:bitmain/model/order.dart';
-import 'package:bitmain/view/orders_page_view.dart';
+import 'package:bitmain/view/view_orders.dart';
 
 class OrdersPagePresenter {
   static const _PER_PAGE = 20;

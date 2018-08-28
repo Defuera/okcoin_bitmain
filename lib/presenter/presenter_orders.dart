@@ -29,7 +29,7 @@ class OrdersPagePresenter {
     try {
       final orders = await _service.getOrders(_ordersLoaded, _PER_PAGE);
       _onDataLoaded(orders);
-      _loadDataDelayed();
+      _loadDataDelayed(); //load recursively
     } catch (error, stacktrace) {
       print(stacktrace.toString());
       _view.showError();
